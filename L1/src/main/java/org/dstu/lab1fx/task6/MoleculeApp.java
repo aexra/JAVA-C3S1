@@ -1,0 +1,35 @@
+package org.dstu.lab1fx.task6;
+
+import javafx.fxml.FXMLLoader;
+import javafx.scene.PerspectiveCamera;
+import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+import org.dstu.lab1fx.ApplicationBase;
+
+import java.util.Objects;
+
+public class MoleculeApp extends ApplicationBase {
+    @Override
+    public void start(Stage stage) throws Exception {
+        HBox root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("fxml/main.fxml")));
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(Objects.requireNonNull(ApplicationBase.class.getResource("css/style.css")).toExternalForm());
+        stage.setTitle("Atom3D");
+        stage.getIcons().add(stageIcon);
+        stage.setMinWidth(600);
+        stage.setMinHeight(500);
+
+//        PerspectiveCamera camera = new PerspectiveCamera(true);
+//        camera.setTranslateZ(-500);
+
+//        scene.setCamera(camera);
+        stage.setScene(scene);
+
+        stage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}

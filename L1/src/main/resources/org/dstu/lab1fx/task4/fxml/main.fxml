@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox prefHeight="450" prefWidth="800" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.dstu.lab1fx.task4.GraphAppController">
+        <TitledPane alignment="CENTER" animated="false" collapsible="false" contentDisplay="BOTTOM" prefWidth="700.0" text="Графики функций" HBox.hgrow="ALWAYS">
+              <HBox>
+                    <LineChart fx:id="lineChart" createSymbols="false" HBox.hgrow="ALWAYS">
+                      <xAxis>
+                        <NumberAxis label="Аргумент" />
+                      </xAxis>
+                      <yAxis>
+                        <NumberAxis label="Функция" side="LEFT" />
+                      </yAxis>
+                    </LineChart>
+              </HBox>
+        </TitledPane>
+      <TitledPane alignment="CENTER" animated="false" collapsible="false" contentDisplay="BOTTOM" prefWidth="195.0" text="Инструменты" HBox.hgrow="ALWAYS">
+            <VBox spacing="10.0">
+                  <TitledPane collapsible="false" contentDisplay="BOTTOM" text="Функция">
+                        <FlowPane>
+                             <fx:define>
+                                 <ToggleGroup fx:id="functionToggleGroup"/>
+                             </fx:define>
+                             <RadioButton id="sin" mnemonicParsing="false" text="y(x) = sin(x)" selected="true" toggleGroup="$functionToggleGroup"/>
+                             <RadioButton id="sincos2" mnemonicParsing="false" text="y(x) = sin(x)+2cos(x)" toggleGroup="$functionToggleGroup"/>
+                             <RadioButton id="sinsqr" mnemonicParsing="false" text="y(x) = sin(x^2)" toggleGroup="$functionToggleGroup"/>
+                        </FlowPane>
+                  </TitledPane>
+                  <TitledPane collapsible="false" contentDisplay="BOTTOM" text="Число точек">
+                        <TextField fx:id="stepsField" onAction="#changeSteps"/>
+                  </TitledPane>
+                  <TitledPane collapsible="false" contentDisplay="BOTTOM" text="Диапазон значений">
+                     <graphic>
+                        <VBox>
+                              <TextField fx:id="minFuncArg" alignment="TOP_LEFT" onAction="#changeMinArg" promptText="min"/>
+                              <TextField fx:id="maxFuncArg" alignment="TOP_LEFT" onAction="#changeMaxArg" promptText="max"/>
+                        </VBox>
+                     </graphic>
+                  </TitledPane>
+                  <TitledPane collapsible="false" contentDisplay="BOTTOM" text="Отображение функции">
+                        <FlowPane>
+                              <fx:define>
+                                  <ToggleGroup fx:id="visibilityToggleGroup"/>
+                              </fx:define>
+                              <RadioButton id="sin" mnemonicParsing="false" onAction="#showGraph" selected="true" text="Отобразить" toggleGroup="$visibilityToggleGroup"/>
+                              <RadioButton id="sincos2" mnemonicParsing="false" onAction="#hideGraph" text="Скрыть" toggleGroup="$visibilityToggleGroup"/>
+                        </FlowPane>
+                  </TitledPane>
+            </VBox>
+      </TitledPane>
+</HBox>
