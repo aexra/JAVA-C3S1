@@ -11,6 +11,7 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 import javafx.util.Pair;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -75,6 +76,22 @@ public class Molecule extends Group {
         this.setScaleX(value);
         this.setScaleY(value);
     }
+    public void turnHorizontally(double value) {
+        var center = getCenter();
+        Rotate rotateX = new Rotate(value, center.getX(), center.getY(), center.getZ(), Rotate.X_AXIS);
+
+        this.removeBoundingRectangle();
+        this.getTransforms().add(rotateX);
+        this.addBoundingRectangle();
+    }
+    public void turnVertically(double value) {
+        var center = getCenter();
+        Rotate rotateY = new Rotate(value, center.getX(), center.getY(), center.getZ(), Rotate.Y_AXIS);
+
+        this.removeBoundingRectangle();
+        this.getTransforms().add(rotateY);
+        this.addBoundingRectangle();
+    }
 
     private void addAtoms() {
         for (var atom : atoms) {
@@ -101,9 +118,32 @@ public class Molecule extends Group {
     private void addBoundingRectangle() {
         boundingRectangle = new Rectangle(this.getBounds().getWidth(), this.getBounds().getHeight());
         boundingRectangle.setFill(Color.rgb(255, 0, 0, 0.5));
-        boundingRectangle.setX(this.getBounds().getMinX());
-        boundingRectangle.setY(this.getBounds().getMinY());
+
+        Translate groupTranslate = new Translate();
+        Rotate groupRotate = new Rotate();
+
+        for (var transform : this.getTransforms()) {
+            if (transform instanceof Translate) {
+                groupTranslate = (Translate) transform;
+            } else if (transform instanceof Rotate) {
+                groupRotate = (Rotate) transform;
+            }
+        }
+
+        var x = getBounds().getMinX();
+        var y = getBounds().getMinY();
+
+        double correctedX = x - groupTranslate.getX();
+        double correctedY = y - groupTranslate.getY();
+
+        boundingRectangle.setTranslateX(correctedX);
+        boundingRectangle.setTranslateY(correctedY);
+        boundingRectangle.setRotate(-groupRotate.getAngle());
+
         this.getChildren().add(boundingRectangle);
+
+        boundingRectangle.setOnMousePressed(this.getOnMousePressed());
+        boundingRectangle.setOnMouseDragged(this.getOnMouseDragged());
     }
     private void removeBoundingRectangle() {
         this.getChildren().remove(boundingRectangle);
@@ -111,6 +151,21 @@ public class Molecule extends Group {
 
     public Bounds getBounds() {
         return this.localToScene(this.getBoundsInLocal());
+    }
+    public Point3D getCenter() {
+        var tmpp = new Point3D(0, 0, 0);
+
+        for (var atom : atoms) {
+            tmpp.add(new Point3D(atom.x, atom.y, atom.z));
+        }
+
+        var p = new Point3D(
+                tmpp.getX() / atoms.size(),
+                tmpp.getY() / atoms.size(),
+                tmpp.getZ() / atoms.size()
+        );
+
+        return p;
     }
 
     private Cylinder createConnection(Point3D origin, Point3D target) {

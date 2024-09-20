@@ -6,6 +6,8 @@ import javafx.fxml.FXML;
 import javafx.geometry.Point3D;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
@@ -19,13 +21,18 @@ public class MoleculeAppController {
     @FXML Pane moleculePane;
     @FXML ColorPicker colorPicker;
 
-    private Molecule molecule;
+    public Molecule molecule;
     private final double SCALE_MIN = 0.1;
     private final double SCALE_MAX = 5;
     private final double SCALE_DELTA = 0.1;
 
     private double anchorX;
     private double anchorY;
+
+    @FXML
+    public void initialize() {
+
+    }
 
     @FXML private void processFileOpening(ActionEvent event) throws IOException {
         File file = readAtomAsFile();
@@ -35,17 +42,17 @@ public class MoleculeAppController {
             anchorX = 0;
             anchorY = 0;
 
-            molecule = Molecule.load(file, new Point3D(moleculePane.getWidth() / 3, moleculePane.getHeight() / 3, 100));
+            molecule = Molecule.load(file, new Point3D(moleculePane.getWidth() / 3, moleculePane.getHeight() / 3, 50));
 
             System.out.println(molecule);
 
             molecule.build();
 
-            molecule.boundingRectangle.setOnMousePressed(e -> {
+            molecule.setOnMousePressed(e -> {
                 anchorX = e.getX();
                 anchorY = e.getY();
             });
-            molecule.boundingRectangle.setOnMouseDragged(e -> {
+            molecule.setOnMouseDragged(e -> {
                 molecule.setTranslateX(e.getSceneX() - anchorX);
                 molecule.setTranslateY(e.getSceneY() - anchorY);
             });
