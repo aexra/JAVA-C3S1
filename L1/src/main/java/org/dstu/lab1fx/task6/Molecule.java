@@ -69,6 +69,15 @@ public class Molecule extends Group {
         addAtoms();
         addBoundingRectangle();
 
+        var s = new Sphere(5);
+
+        var c = getCenter();
+
+        s.setTranslateX(c.getX());
+        s.setTranslateY(c.getY());
+
+        this.getChildren().add(s);
+
         return this;
     }
 
@@ -153,19 +162,34 @@ public class Molecule extends Group {
         return this.localToScene(this.getBoundsInLocal());
     }
     public Point3D getCenter() {
-        var tmpp = new Point3D(0, 0, 0);
+        var points = new ArrayList<Point3D>();
 
-        for (var atom : atoms) {
-            tmpp.add(new Point3D(atom.x, atom.y, atom.z));
+        for (var node : this.getChildren()) {
+            if (node instanceof Sphere) {
+                points.add(new Point3D(node.getTranslateX(), node.getTranslateY(), node.getTranslateZ()));
+            }
         }
 
-        var p = new Point3D(
-                tmpp.getX() / atoms.size(),
-                tmpp.getY() / atoms.size(),
-                tmpp.getZ() / atoms.size()
-        );
+        return findAveragePoint(points);
+    }
 
-        return p;
+    public static Point3D findAveragePoint(List<Point3D> points) {
+        if (points == null || points.isEmpty()) {
+            throw new IllegalArgumentException("Points list cannot be null or empty");
+        }
+
+        double sumX = 0;
+        double sumY = 0;
+        double sumZ = 0;
+
+        for (Point3D point : points) {
+            sumX += point.getX();
+            sumY += point.getY();
+            sumZ += point.getZ();
+        }
+
+        int count = points.size();
+        return new Point3D(sumX / count, sumY / count, sumZ / count);
     }
 
     private Cylinder createConnection(Point3D origin, Point3D target) {
