@@ -3,7 +3,9 @@ package org.dstu.lab1fx.task6;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Cylinder;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
@@ -23,6 +25,7 @@ public class Molecule extends Group {
 
     public ArrayList<Atom> atoms = new ArrayList<>();
     public String name;
+    public Rectangle boundingRectangle;
 
     public Molecule(String name, Atom... atoms) {
         this.atoms.addAll(Arrays.stream(atoms).toList());
@@ -61,18 +64,19 @@ public class Molecule extends Group {
     }
 
     public Molecule build() {
-        var connections = new ArrayList<Cylinder>();
-        var connectionsCombinations = createPairCombinations(atoms);
+        addConnections();
+        addAtoms();
+        addBoundingRectangle();
 
-        for (var comb : connectionsCombinations) {
-            var p1 = new Point3D(comb.getKey().x, comb.getKey().y, comb.getKey().z);
-            var p2 = new Point3D(comb.getValue().x, comb.getValue().y, comb.getValue().z);
-            var c = createConnection(p1, p2);
-            connections.add(c);
-        }
+        return this;
+    }
 
-        this.getChildren().addAll(connections);
+    public void scale(double value) {
+        this.setScaleX(value);
+        this.setScaleY(value);
+    }
 
+    private void addAtoms() {
         for (var atom : atoms) {
             var s = new Sphere();
 
@@ -83,10 +87,26 @@ public class Molecule extends Group {
 
             this.getChildren().add(s);
         }
+    }
+    private void addConnections() {
+        for (var comb : createPairCombinations(atoms)) {
+            var p1 = new Point3D(comb.getKey().x, comb.getKey().y, comb.getKey().z);
+            var p2 = new Point3D(comb.getValue().x, comb.getValue().y, comb.getValue().z);
 
-        System.out.println(this.getChildren().size());
+            var c = createConnection(p1, p2);
 
-        return this;
+            this.getChildren().add(c);
+        }
+    }
+    private void addBoundingRectangle() {
+        boundingRectangle = new Rectangle(this.getBounds().getWidth(), this.getBounds().getHeight());
+        boundingRectangle.setFill(Color.rgb(255, 0, 0, 0.5));
+        boundingRectangle.setX(this.getBounds().getMinX());
+        boundingRectangle.setY(this.getBounds().getMinY());
+        this.getChildren().add(boundingRectangle);
+    }
+    private void removeBoundingRectangle() {
+        this.getChildren().remove(boundingRectangle);
     }
 
     public Bounds getBounds() {

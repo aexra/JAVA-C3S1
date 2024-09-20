@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Point3D;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.FileChooser;
@@ -15,24 +14,41 @@ import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 public class MoleculeAppController {
     @FXML Pane moleculePane;
     @FXML ColorPicker colorPicker;
+
     private Molecule molecule;
-    private final double SCALE_DELTA = 1.1;
+    private final double SCALE_MIN = 0.1;
+    private final double SCALE_MAX = 5;
+    private final double SCALE_DELTA = 0.1;
+
+    private double anchorX;
+    private double anchorY;
 
     @FXML private void processFileOpening(ActionEvent event) throws IOException {
         File file = readAtomAsFile();
 
         if (file != null) {
             moleculePane.getChildren().clear();
+            anchorX = 0;
+            anchorY = 0;
 
-            molecule = Molecule.load(file, new Point3D(moleculePane.getWidth() / 2, moleculePane.getHeight() / 2, 100));
+            molecule = Molecule.load(file, new Point3D(moleculePane.getWidth() / 3, moleculePane.getHeight() / 3, 100));
+
             System.out.println(molecule);
 
             molecule.build();
+
+            molecule.boundingRectangle.setOnMousePressed(e -> {
+                anchorX = e.getX();
+                anchorY = e.getY();
+            });
+            molecule.boundingRectangle.setOnMouseDragged(e -> {
+                molecule.setTranslateX(e.getSceneX() - anchorX);
+                molecule.setTranslateY(e.getSceneY() - anchorY);
+            });
 
             moleculePane.getChildren().add(molecule);
 
@@ -51,36 +67,12 @@ public class MoleculeAppController {
         return file;
     }
 
-    private void normalizeOnMax(double[] array) {
-        double max = Arrays.stream(array).reduce(Double.MIN_VALUE, Double::max);
-        for (int i = 0; i < array.length; i++) {
-            array[i] /= max;
-        }
-    }
-
-    private double[] parseStringItems(String[] items) throws IOException {
-        double[] parsedItems = new double[items.length];
-        for (int i = 0; i < items.length; i++) {
-            try {
-                parsedItems[i] = Double.parseDouble(items[i]);
-            }
-            catch (NumberFormatException e) {
-                throw new IOException();
-            }
-        }
-        return parsedItems;
-    }
-
     public ColorPicker getColorPicker() {
         return colorPicker;
     }
 
-    @FXML private void moleculeZoom(ScrollEvent event) {
-
-    }
-
-    @FXML private void moveMolecule(MouseEvent mouseEvent) {
-
+    @FXML private void moleculePaneScroll(ScrollEvent event) {
+        molecule.scale(event.getDeltaY() > 0 ? molecule.getScaleX() < SCALE_MAX ? molecule.getScaleX() + SCALE_DELTA : SCALE_MAX : molecule.getScaleX() > SCALE_MIN ? molecule.getScaleX() - SCALE_DELTA : SCALE_MIN);
     }
 
     @FXML private void saveToFile() {
