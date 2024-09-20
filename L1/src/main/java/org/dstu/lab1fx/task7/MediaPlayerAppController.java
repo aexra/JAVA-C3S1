@@ -16,6 +16,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MediaPlayerAppController {
@@ -64,7 +65,7 @@ public class MediaPlayerAppController {
         FileChooser fc = new FileChooser();
         fc.setTitle("Открыть файл");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Video File(mp4)", "*.mp4"));
-        fc.setInitialDirectory(new File("D:\\DSTU\\JavaEE\\labs\\lab1FX\\src\\main\\resources\\org\\dstu\\lab1fx\\task7\\videos"));
+        fc.setInitialDirectory(Path.of(System.getProperty("user.dir") + "\\src\\main\\resources\\org\\dstu\\lab1fx\\task7\\videos").toFile());
         File file;
         if ((file = fc.showOpenDialog(null)) != null) {
             System.out.println("Файл успешно открыт: " + file.getAbsolutePath());
