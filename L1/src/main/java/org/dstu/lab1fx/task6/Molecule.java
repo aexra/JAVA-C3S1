@@ -4,6 +4,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Cylinder;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Sphere;
@@ -25,30 +26,32 @@ public class Molecule extends Group {
     public static final double ATOM_RADIUS = 10;
 
     public ArrayList<Atom> atoms = new ArrayList<>();
+    public ArrayList<Connection> connections = new ArrayList<>();
     public String name;
     public Rectangle boundingRectangle;
     public Sphere centerMarker;
 
-    public Molecule(String name, Atom... atoms) {
+    public Molecule(String name, Connection[] cons, Atom... atoms) {
         this.atoms.addAll(Arrays.stream(atoms).toList());
+        this.connections.addAll(Arrays.stream(cons).toList());
         this.name = name;
     }
 
-    public static Molecule load(File file) throws IOException {
-        var ms = Files.readAllLines(file.toPath());
-
-        var atoms_n = parseInt(ms.get(0));
-        var molecule_name = ms.get(1);
-        var atoms = new Atom[atoms_n];
-
-        for (var i = 0; i < atoms_n; i++) {
-            var atom_s = ms.get(i + 2);
-            var splitted = atom_s.split(" ");
-            atoms[i] = new Atom(splitted[0], parseDouble(splitted[1]), parseDouble(splitted[2]), parseDouble(splitted[3]));
-        }
-
-        return new Molecule(molecule_name, atoms);
-    }
+//    public static Molecule load(File file) throws IOException {
+//        var ms = Files.readAllLines(file.toPath());
+//
+//        var atoms_n = parseInt(ms.get(0));
+//        var molecule_name = ms.get(1);
+//        var atoms = new Atom[atoms_n];
+//
+//        for (var i = 0; i < atoms_n; i++) {
+//            var atom_s = ms.get(i + 2);
+//            var splitted = atom_s.split(" ");
+//            atoms[i] = new Atom(splitted[0], parseDouble(splitted[1]), parseDouble(splitted[2]), parseDouble(splitted[3]), parseInt(splitted[4]), parseInt(splitted[5]), parseInt(splitted[6]));
+//        }
+//
+//        return new Molecule(molecule_name, atoms);
+//    }
     public static Molecule load(File file, Point3D modifier) throws IOException {
         var ms = Files.readAllLines(file.toPath());
 
@@ -59,10 +62,19 @@ public class Molecule extends Group {
         for (var i = 0; i < atoms_n; i++) {
             var atom_s = ms.get(i + 2);
             var splitted = atom_s.split(" ");
-            atoms[i] = new Atom(splitted[0], parseDouble(splitted[1]) * modifier.getX(), parseDouble(splitted[2]) * modifier.getY(), parseDouble(splitted[3]) * modifier.getZ());
+            atoms[i] = new Atom(splitted[0], parseDouble(splitted[1]) * modifier.getX(), parseDouble(splitted[2]) * modifier.getY(), parseDouble(splitted[3]) * modifier.getZ(), parseInt(splitted[4]), parseInt(splitted[5]), parseInt(splitted[6]));
         }
 
-        return new Molecule(molecule_name, atoms);
+        var pairs = createPairCombinations(Arrays.stream(atoms).toList());
+        var cons = new Connection[pairs.size()];
+
+        for (var i = 0; i < pairs.size(); i++) {
+            var atom_s = ms.get(i + 2 + atoms_n);
+            var splitted = atom_s.split(" ");
+            cons[i] = new Connection(parseInt(splitted[0]), parseInt(splitted[1]), parseInt(splitted[2]));
+        }
+
+        return new Molecule(molecule_name, cons, atoms);
     }
 
     public Molecule build() {
@@ -103,27 +115,37 @@ public class Molecule extends Group {
             s.setTranslateY(atom.y);
             s.setTranslateZ(atom.z);
 
+            var material = new PhongMaterial();
+            material.setDiffuseColor(Color.rgb(atom.r, atom.g, atom.b));
+            s.setMaterial(material);
+
             this.getChildren().add(s);
         }
     }
     private void addConnections() {
-        for (var comb : createPairCombinations(atoms)) {
+        var combs = createPairCombinations(atoms);
+        for (var comb : combs) {
+            var i = combs.indexOf(comb);
             var p1 = new Point3D(comb.getKey().x, comb.getKey().y, comb.getKey().z);
             var p2 = new Point3D(comb.getValue().x, comb.getValue().y, comb.getValue().z);
 
             var c = createConnection(p1, p2);
+            var meta = connections.get(i);
+            var material = new PhongMaterial();
+            material.setDiffuseColor(Color.rgb(meta.r, meta.g, meta.b));
+            c.setMaterial(material);
 
             this.getChildren().add(c);
         }
     }
     private void addCenterDot(Point3D c) {
-        if (centerMarker != null) return;
-        centerMarker = new Sphere(5);
-
-        centerMarker.setTranslateX(c.getX());
-        centerMarker.setTranslateY(c.getY());
-
-        this.getChildren().add(centerMarker);
+//        if (centerMarker != null) return;
+//        centerMarker = new Sphere(5);
+//
+//        centerMarker.setTranslateX(c.getX());
+//        centerMarker.setTranslateY(c.getY());
+//
+//        this.getChildren().add(centerMarker);
     }
     private void removeCenterDot() {
         this.getChildren().remove(centerMarker);
@@ -132,7 +154,7 @@ public class Molecule extends Group {
     private void addBoundingRectangle() {
         if (boundingRectangle != null) return;
         boundingRectangle = new Rectangle(this.getBounds().getWidth(), this.getBounds().getHeight());
-        boundingRectangle.setFill(Color.rgb(255, 0, 0, 0.5));
+        boundingRectangle.setFill(Color.rgb(255, 0, 0, 0));
 
 //        Translate groupTranslate = new Translate();
 //        Rotate groupRotate = new Rotate();
