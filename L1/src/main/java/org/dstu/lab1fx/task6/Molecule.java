@@ -27,6 +27,7 @@ public class Molecule extends Group {
     public ArrayList<Atom> atoms = new ArrayList<>();
     public String name;
     public Rectangle boundingRectangle;
+    public Sphere centerMarker;
 
     public Molecule(String name, Atom... atoms) {
         this.atoms.addAll(Arrays.stream(atoms).toList());
@@ -68,16 +69,7 @@ public class Molecule extends Group {
         addConnections();
         addAtoms();
         addBoundingRectangle();
-
-        var s = new Sphere(5);
-
-        var c = getCenter();
-
-        s.setTranslateX(c.getX());
-        s.setTranslateY(c.getY());
-
-        this.getChildren().add(s);
-
+        addCenterDot(getCenter());
         return this;
     }
 
@@ -124,30 +116,44 @@ public class Molecule extends Group {
             this.getChildren().add(c);
         }
     }
+    private void addCenterDot(Point3D c) {
+        if (centerMarker != null) return;
+        centerMarker = new Sphere(5);
+
+        centerMarker.setTranslateX(c.getX());
+        centerMarker.setTranslateY(c.getY());
+
+        this.getChildren().add(centerMarker);
+    }
+    private void removeCenterDot() {
+        this.getChildren().remove(centerMarker);
+        centerMarker = null;
+    }
     private void addBoundingRectangle() {
+        if (boundingRectangle != null) return;
         boundingRectangle = new Rectangle(this.getBounds().getWidth(), this.getBounds().getHeight());
         boundingRectangle.setFill(Color.rgb(255, 0, 0, 0.5));
 
-        Translate groupTranslate = new Translate();
-        Rotate groupRotate = new Rotate();
-
-        for (var transform : this.getTransforms()) {
-            if (transform instanceof Translate) {
-                groupTranslate = (Translate) transform;
-            } else if (transform instanceof Rotate) {
-                groupRotate = (Rotate) transform;
-            }
-        }
-
-        var x = getBounds().getMinX();
-        var y = getBounds().getMinY();
-
-        double correctedX = x - groupTranslate.getX();
-        double correctedY = y - groupTranslate.getY();
-
-        boundingRectangle.setTranslateX(correctedX);
-        boundingRectangle.setTranslateY(correctedY);
-        boundingRectangle.setRotate(-groupRotate.getAngle());
+//        Translate groupTranslate = new Translate();
+//        Rotate groupRotate = new Rotate();
+//
+//        for (var transform : this.getTransforms()) {
+//            if (transform instanceof Translate) {
+//                groupTranslate = (Translate) transform;
+//            } else if (transform instanceof Rotate) {
+//                groupRotate = (Rotate) transform;
+//            }
+//        }
+//
+//        var x = getBounds().getMinX();
+//        var y = getBounds().getMinY();
+//
+//        double correctedX = x - groupTranslate.getX();
+//        double correctedY = y - groupTranslate.getY();
+//
+//        boundingRectangle.setTranslateX(correctedX);
+//        boundingRectangle.setTranslateY(correctedY);
+//        boundingRectangle.setRotate(-groupRotate.getAngle());
 
         this.getChildren().add(boundingRectangle);
 
@@ -156,12 +162,15 @@ public class Molecule extends Group {
     }
     private void removeBoundingRectangle() {
         this.getChildren().remove(boundingRectangle);
+        boundingRectangle = null;
     }
 
     public Bounds getBounds() {
         return this.localToScene(this.getBoundsInLocal());
     }
     public Point3D getCenter() {
+        removeCenterDot();
+
         var points = new ArrayList<Point3D>();
 
         for (var node : this.getChildren()) {
@@ -170,7 +179,11 @@ public class Molecule extends Group {
             }
         }
 
-        return findAveragePoint(points);
+        var c = findAveragePoint(points);
+
+        addCenterDot(c);
+
+        return c;
     }
 
     public static Point3D findAveragePoint(List<Point3D> points) {
